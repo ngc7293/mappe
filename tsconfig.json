@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "allowJs": false,
+    "isolatedModules": true,
+    "module": "ESNext",
+    "moduleDetection": "force",
+    "moduleResolution": "Node",
+    "target": "ESNext",
+    "useDefineForClassFields": true,
+    "baseUrl": "./src/",
+    "paths": {
+      "@components/*": ["components/*"],
+      "@lib/*": ["lib/*"],
+    },
+  },
+  "include": ["src/**/*.ts", "src/**/*.svelte"]
+}
