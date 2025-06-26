@@ -1,15 +1,18 @@
 <script lang="ts">
     import type { LayerData } from "@lib/types";
 
+    type SetLayerColorFunc = (name: string, color: string) => void;
     type SetLayerVisibilityFunc = (name: string, visibility: boolean) => void;
     type RemoveLayerFunc = (name: string) => void;
 
     let { 
         layers,
+        setLayerColor,
         setLayerVisibility,
         removeLayer
     } : {
         layers: LayerData[],
+        setLayerColor: SetLayerColorFunc,
         setLayerVisibility: SetLayerVisibilityFunc,
         removeLayer: RemoveLayerFunc
     } = $props();
@@ -19,7 +22,7 @@
     {#each layers as layer}
         <div class="layer-item" style="background-color:{layer.color};">
             <span class="layer-name">{layer.name}</span>
-            <!-- <button class="layer-color">recolor</button> TODO: Implement -->
+            <input class="layer-color" type=color onchange={(e) => setLayerColor(layer.name, (e.target as HTMLInputElement).value)} value={layer.color} />
             <button class="layer-toggle" onclick={(_) => setLayerVisibility(layer.name, !layer.visible)}>{#if layer.visible }hide{:else}show{/if}</button>
             <button class="layer-remove" onclick={(_) => removeLayer(layer.name)}>remove</button>
         </div>
@@ -39,7 +42,7 @@
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         padding: 8px 16px;
         border-radius: 8px;
-        align-items: left;
+        align-items: center;
         font-size: 12px;
         font-family: monospace;
     }
@@ -50,7 +53,7 @@
         font-weight: bold;
     }
 
-    .layer-item button {
+    .layer-item button, .layer-item input {
         color: white;
         background-color: transparent;
         border: none;
@@ -58,6 +61,23 @@
         font-family: monospace;
         font-size: 12px;;
         text-decoration: underline;
+    }
+
+    .layer-item input[type="color"] {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        border-radius: 8px;
+        width: 40px;
+        height: 24px;
+        border: white 1px solid;
+        margin: 0 4px;
+    }
+    .layer-item input[type="color"]::-webkit-color-swatch {
+        border: none;
+    }
+    .layer-item input[type="color"]::-moz-color-swatch {
+        border: none;
     }
 
 </style>

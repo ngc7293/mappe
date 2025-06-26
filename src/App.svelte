@@ -11,7 +11,7 @@
   let container: HTMLDivElement;
   let map: Map;
 
-  let counter = 1;
+  let counter: number = $state(1);
   const colors: string[] = [
     "#f0a01c",
     "#66cf2d",
@@ -24,6 +24,7 @@
   onMount(() => {
     map = new Map({
       container: container,
+      accessToken: "pk.eyJ1IjoibmdjNzI5MyIsImEiOiJjbTljd3J0NzkweHlwMmtxMmhtdGJsZnY5In0.d-AzdQ9pM64VTsrc7yQz2g",
       style: "mapbox://styles/mapbox/streets-v11",
       projection: "globe",
       center: [-73.5674, 45.5019], // Montréal
@@ -43,16 +44,32 @@
     return () => map.remove();
   });
 
-  function addLayer(name: string | null, data: GeoJSON) {
-    name = name || `Layer ${counter}`;
+  function isPolygon(data: GeoJSON): boolean {
+    return ["FeatureCollection", "Feature", "Polygon", "MultiPolygon"].indexOf(data.type) !== -1;
+  }
+
+  function addLayer(name: string, data: GeoJSON) {
     const color = colors[counter % colors.length];
 
-    layers.push({ name, data, color, visible: true });
+    const layer: LayerData = { name, data, color, polygon: isPolygon(data), visible: true }
+    layers.push(layer);
     counter += 1;
 
     map.addSource(name, {
       type: "geojson",
       data,
+    });
+    map.addLayer({
+      id: `${name}-point`,
+      type: "circle",
+      source: name,
+      layout: {
+        visibility: "visible",
+      },
+      paint: {
+        "circle-color": color,
+        "circle-radius": 4,
+      },
     });
     map.addLayer({
       id: `${name}-line`,
@@ -68,6 +85,33 @@
         "line-width": 4,
       },
     });
+
+    if (layer.polygon) {
+      map.addLayer({
+        id: `${name}-fill`,
+        type: "fill",
+        source: name,
+        layout: {},
+        paint: {
+          "fill-color": color,
+          "fill-opacity": 0.33,
+        },
+      });
+    }
+  }
+
+  function setLayerColor(name: string, color: string) {
+    const layer = layers.find((layer) => layer.name === name);
+
+    if (layer) {
+      layer.color = color;
+      map.setPaintProperty(`${name}-point`, "circle-color", color);
+      map.setPaintProperty(`${name}-line`, "line-color", color);
+
+      if (layer.polygon) {
+        map.setPaintProperty(`${name}-fill`, "fill-color", color);
+      }
+    }
   }
 
   function setLayerVisibility(name: string, visibility: boolean) {
@@ -75,7 +119,12 @@
 
     if (layer) {
       layer.visible = visibility;
+      map.setLayoutProperty(`${name}-point`, "visibility", visibility ? "visible" : "none");
       map.setLayoutProperty(`${name}-line`, "visibility", visibility ? "visible" : "none");
+
+      if (layer.polygon) {
+        map.setLayoutProperty(`${name}-fill`, "visibility", visibility ? "visible" : "none");
+      }
     }
   }
 
@@ -83,17 +132,22 @@
     const index = layers.findIndex((layer) => layer.name === name);
 
     if (index !== -1) {
-      layers.splice(index, 1);
+      if (layers[index].polygon) {
+        map.removeLayer(`${name}-fill`);
+      }
       map.removeLayer(`${name}-line`);
+      map.removeLayer(`${name}-point`);
       map.removeSource(name);
+
+      layers.splice(index, 1);
     }
   }
 </script>
 
 <div id="map-container" bind:this={container}></div>
 <div id="controls-container">
-  <LayerInput {addLayer} />
-  <LayerList {layers} {setLayerVisibility} {removeLayer} />
+  <LayerInput {addLayer} defaultName={`Layer ${counter}`} />
+  <LayerList {layers} {setLayerColor} {setLayerVisibility} {removeLayer} />
 </div>
 
 <style>

@@ -5,12 +5,31 @@
 
     type AddLayerFunc = (name: string, data: GeoJSON) => void;
 
-    let { addLayer } : { addLayer: AddLayerFunc } = $props();
+    let {
+        addLayer,
+        defaultName
+    } : {
+        addLayer: AddLayerFunc
+        defaultName: string
+    } = $props();
 
-    let textarea: HTMLTextAreaElement;
+    let nameInput: HTMLTextAreaElement;
+    let dataInput: HTMLTextAreaElement;
+
+    function isWithinPolylineRange(str: string): boolean {
+        for (let i = 0; i < str.length; i++) {
+            const charCode = str.charCodeAt(i);
+            if (charCode < 63 || charCode > 126) {
+                return false; 
+            }
+        }
+
+        return true;
+    }
 
     function onClick(_: Event) {
-        let trimmed = textarea.value.trim();
+        let trimmed = dataInput.value.trim();
+        let name = nameInput.value.trim() || defaultName;
 
         if (!trimmed) {
             return;
@@ -18,27 +37,28 @@
 
         if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
             // Presume GeoJSON
-            addLayer(null, JSON.parse(textarea.value) as GeoJSON);
-        } else if (trimmed.match(/^[a-zA-Z0-9@?`]+$/)) {
-            addLayer(null, polyline.toGeoJSON(trimmed) as GeoJSON);
+            addLayer(name, JSON.parse(dataInput.value) as GeoJSON);
+        } else if (isWithinPolylineRange(trimmed)) {
+            addLayer(name, polyline.toGeoJSON(trimmed) as GeoJSON);
         } else {
             alert("Invalid input format. Please provide valid GeoJSON or Polyline.");
             return;
         }
 
-
-        textarea.value = "";
+        nameInput.value = "";
+        dataInput.value = "";
     };
 </script>
 
 <div id="layer-input">
-    <textarea bind:this={textarea} placeholder="GeoJSON / Polyline" rows="10"></textarea>
+    <textarea bind:this={nameInput} placeholder="Layer Name" rows="1"></textarea>
+    <textarea bind:this={dataInput} placeholder="GeoJSON / Polyline" rows="10"></textarea>
     <button onclick={onClick}>Add</button>
 </div>
 
 <style>
     #layer-input {
-        background-color: rgb(126, 104, 222);
+        background-color: rgb(255, 255, 255);
         padding: 8px;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         border-radius: 8px;
@@ -61,8 +81,8 @@
     }
 
     #layer-input button {
-        background-color: rgb(188, 178, 232);
-        color: white;
+        background-color: rgb(0, 0, 0);
+        color: rgb(255, 255, 255);
         font-weight: bold;
         border: none;
         border-radius: 4px;
@@ -71,7 +91,7 @@
     }
 
     #layer-input button:hover {
-        background-color: rgb(213, 206, 245);
-        transition: background-color 0.3s ease;
+        background-color: rgb(91, 91, 91);
+        transition: background-color 0.2s ease;
     }
 </style>
