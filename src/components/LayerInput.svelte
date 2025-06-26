@@ -58,7 +58,8 @@
 
 <style>
     #layer-input {
-        background-color: rgb(255, 255, 255);
+        background-color: rgb(255, 255, 255, 50%);
+        backdrop-filter: blur(10px);
         padding: 8px;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         border-radius: 8px;
@@ -68,6 +69,7 @@
     }
 
     #layer-input textarea {
+        background-color: rgb(255, 255, 255, 50%);
         resize: none;
         border: none;
         border-radius: 4px;
