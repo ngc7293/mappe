@@ -10,8 +10,8 @@
     "baseUrl": "./src/",
     "paths": {
       "@components/*": ["components/*"],
-      "@lib/*": ["lib/*"],
-    },
+      "@lib/*": ["lib/*"]
+    }
   },
-  "include": ["src/**/*.ts", "src/**/*.svelte"]
+  "include": ["*.ts", "src/**/*.ts", "src/**/*.svelte"]
 }

@@ -38,4 +38,3 @@ jobs:
             ghcr.io/${{ github.repository }}:${{ env.VERSION }}
         env:
           VERSION: ${{ env.VERSION }}
-            

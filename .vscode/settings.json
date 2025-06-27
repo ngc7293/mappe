@@ -1,0 +1,4 @@
+{
+  "eslint.validate": ["javascript", "javascriptreact", "svelte"],
+  "task.autoDetect": "off"
+}

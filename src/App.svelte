@@ -1,30 +1,31 @@
 <script lang="ts">
   import type { GeoJSON } from "geojson";
   import type { LayerData } from "@lib/types";
+  import type { MapboxStyle } from "@lib/enum";
 
   import { onMount } from "svelte";
   import { Map } from "mapbox-gl";
 
   import LayerInput from "@components/LayerInput.svelte";
   import LayerList from "@components/LayerList.svelte";
+  import BasemapInput from "@components/BasemapInput.svelte";
+  import { BasemapType } from "@lib/enum";
 
   let container: HTMLDivElement;
   let map: Map;
 
   let counter: number = $state(1);
-  const colors: string[] = [
-    "#f0a01c",
-    "#66cf2d",
-    "#4b5ae3",
-    "#e06577"
-  ];
+  const colors: string[] = ["#f0a01c", "#66cf2d", "#4b5ae3", "#e06577"];
 
+  let underlyingStyle: MapboxStyle = $state(BasemapType.MapboxStreets);
+  let basemap: BasemapType = $state(BasemapType.MapboxStreets);
   let layers: LayerData[] = $state([]);
 
   onMount(() => {
     map = new Map({
       container: container,
-      accessToken: "pk.eyJ1IjoibmdjNzI5MyIsImEiOiJjbTljd3J0NzkweHlwMmtxMmhtdGJsZnY5In0.d-AzdQ9pM64VTsrc7yQz2g",
+      accessToken:
+        "pk.eyJ1IjoibmdjNzI5MyIsImEiOiJjbWNlM3psdDQwaXpuMmtvamVpc2RibG1uIn0.hKeXtdmOx5N30MFqP3Pm-w",
       style: "mapbox://styles/mapbox/streets-v11",
       projection: "globe",
       center: [-73.5674, 45.5019], // Montréal
@@ -32,6 +33,22 @@
     });
 
     map.on("style.load", () => {
+      map.addLayer({
+        id: "basemap-osm",
+        type: "raster",
+        source: {
+          type: "raster",
+          tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+          tileSize: 256,
+        },
+        layout: {
+          visibility:
+            basemap === BasemapType.OpenStreetMap ? "visible" : "none",
+        },
+        paint: {
+          "raster-fade-duration": 0,
+        },
+      });
       map.setFog({
         color: "rgb(186, 210, 235)", // Lower atmosphere
         "high-color": "rgb(36, 92, 223)", // Upper atmosphere
@@ -39,21 +56,37 @@
         "space-color": "rgb(11, 11, 25)", // Background color
         "star-intensity": 0.6, // Background star brightness (default 0.35 at low zoooms )
       });
+
+      for (const layer of layers) {
+        addLayerToMap(layer);
+      }
     });
 
     return () => map.remove();
   });
 
-  function isPolygon(data: GeoJSON): boolean {
-    return ["FeatureCollection", "Feature", "Polygon", "MultiPolygon"].indexOf(data.type) !== -1;
-  }
+  function createLayer(name: string, data: GeoJSON) {
+    const index = layers.findIndex((layer) => layer.name === name);
 
-  function addLayer(name: string, data: GeoJSON) {
-    const color = colors[counter % colors.length];
+    if (index !== -1) {
+      layers.splice(index, 1);
+    }
 
-    const layer: LayerData = { name, data, color, polygon: isPolygon(data), visible: true }
+    const layer: LayerData = {
+      name,
+      data,
+      color: colors[counter % colors.length],
+      visible: true,
+    };
+
     layers.push(layer);
     counter += 1;
+
+    addLayerToMap(layer);
+  }
+
+  function addLayerToMap(layer: LayerData) {
+    const { name, data, color, visible } = layer;
 
     map.addSource(name, {
       type: "geojson",
@@ -63,8 +96,10 @@
       id: `${name}-point`,
       type: "circle",
       source: name,
+      slot: "content",
+      filter: ["any", ["==", "$type", "Point"]],
       layout: {
-        visibility: "visible",
+        visibility: visible ? "visible" : "none",
       },
       paint: {
         "circle-color": color,
@@ -75,6 +110,12 @@
       id: `${name}-line`,
       type: "line",
       source: name,
+      slot: "content",
+      filter: [
+        "any",
+        ["==", "$type", "LineString"],
+        ["==", "$type", "Polygon"],
+      ],
       layout: {
         visibility: "visible",
         "line-cap": "round",
@@ -85,19 +126,18 @@
         "line-width": 4,
       },
     });
-
-    if (layer.polygon) {
-      map.addLayer({
-        id: `${name}-fill`,
-        type: "fill",
-        source: name,
-        layout: {},
-        paint: {
-          "fill-color": color,
-          "fill-opacity": 0.33,
-        },
-      });
-    }
+    map.addLayer({
+      id: `${name}-fill`,
+      type: "fill",
+      source: name,
+      slot: "content",
+      filter: ["any", ["==", "$type", "Polygon"]],
+      layout: {},
+      paint: {
+        "fill-color": color,
+        "fill-opacity": 0.33,
+      },
+    });
   }
 
   function setLayerColor(name: string, color: string) {
@@ -107,10 +147,7 @@
       layer.color = color;
       map.setPaintProperty(`${name}-point`, "circle-color", color);
       map.setPaintProperty(`${name}-line`, "line-color", color);
-
-      if (layer.polygon) {
-        map.setPaintProperty(`${name}-fill`, "fill-color", color);
-      }
+      map.setPaintProperty(`${name}-fill`, "fill-color", color);
     }
   }
 
@@ -119,12 +156,21 @@
 
     if (layer) {
       layer.visible = visibility;
-      map.setLayoutProperty(`${name}-point`, "visibility", visibility ? "visible" : "none");
-      map.setLayoutProperty(`${name}-line`, "visibility", visibility ? "visible" : "none");
-
-      if (layer.polygon) {
-        map.setLayoutProperty(`${name}-fill`, "visibility", visibility ? "visible" : "none");
-      }
+      map.setLayoutProperty(
+        `${name}-point`,
+        "visibility",
+        visibility ? "visible" : "none",
+      );
+      map.setLayoutProperty(
+        `${name}-line`,
+        "visibility",
+        visibility ? "visible" : "none",
+      );
+      map.setLayoutProperty(
+        `${name}-fill`,
+        "visibility",
+        visibility ? "visible" : "none",
+      );
     }
   }
 
@@ -132,9 +178,7 @@
     const index = layers.findIndex((layer) => layer.name === name);
 
     if (index !== -1) {
-      if (layers[index].polygon) {
-        map.removeLayer(`${name}-fill`);
-      }
+      map.removeLayer(`${name}-fill`);
       map.removeLayer(`${name}-line`);
       map.removeLayer(`${name}-point`);
       map.removeSource(name);
@@ -142,11 +186,37 @@
       layers.splice(index, 1);
     }
   }
+
+  function setBasemap(value: BasemapType) {
+    if (basemap === value) return;
+
+    basemap = value;
+    switch (basemap) {
+      case BasemapType.OpenStreetMap:
+        map.setLayoutProperty("basemap-osm", "visibility", "visible");
+        break;
+      case BasemapType.MapboxStreets:
+        map.setLayoutProperty("basemap-osm", "visibility", "none");
+        if (underlyingStyle !== BasemapType.MapboxStreets) {
+          map.setStyle("mapbox://styles/mapbox/streets-v12");
+          underlyingStyle = BasemapType.MapboxStreets;
+        }
+        break;
+      case BasemapType.MapboxSatellite:
+        map.setLayoutProperty("basemap-osm", "visibility", "none");
+        if (underlyingStyle !== BasemapType.MapboxSatellite) {
+          map.setStyle("mapbox://styles/mapbox/satellite-v9");
+          underlyingStyle = BasemapType.MapboxSatellite;
+        }
+        break;
+    }
+  }
 </script>
 
 <div id="map-container" bind:this={container}></div>
 <div id="controls-container">
-  <LayerInput {addLayer} defaultName={`Layer ${counter}`} />
+  <LayerInput {createLayer} defaultName={`Layer ${counter}`} />
+  <BasemapInput {basemap} {setBasemap} />
   <LayerList {layers} {setLayerColor} {setLayerVisibility} {removeLayer} />
 </div>
 
