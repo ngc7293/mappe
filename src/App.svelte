@@ -10,6 +10,7 @@
   import LayerList from "@components/LayerList.svelte";
   import BasemapInput from "@components/BasemapInput.svelte";
   import { BasemapType } from "@lib/enum";
+  import { getBounds } from "@lib/geometry";
 
   let container: HTMLDivElement;
   let map: Map;
@@ -25,7 +26,7 @@
     map = new Map({
       container: container,
       accessToken:
-        "pk.eyJ1IjoibmdjNzI5MyIsImEiOiJjbWNlM3psdDQwaXpuMmtvamVpc2RibG1uIn0.hKeXtdmOx5N30MFqP3Pm-w",
+        "pk.eyJ1IjoiZGF2aWRib3VyZ2F1bHQiLCJhIjoiY21jODZqYjRjMDR1eDJxcGtxeGt5YWk1bCJ9.97SbL2cbA-8wBxYhxcqULA",
       style: "mapbox://styles/mapbox/streets-v11",
       projection: "globe",
       center: [-73.5674, 45.5019], // Montréal
@@ -140,6 +141,11 @@
     });
   }
 
+  function centerLayer(name: string) {
+    const layer = layers.find((layer) => layer.name === name);
+    map.fitBounds(getBounds(layer.data), { padding: 40 });
+  }
+
   function setLayerColor(name: string, color: string) {
     const layer = layers.find((layer) => layer.name === name);
 
@@ -217,7 +223,13 @@
 <div id="controls-container">
   <LayerInput {createLayer} defaultName={`Layer ${counter}`} />
   <BasemapInput {basemap} {setBasemap} />
-  <LayerList {layers} {setLayerColor} {setLayerVisibility} {removeLayer} />
+  <LayerList
+    {layers}
+    {centerLayer}
+    {setLayerColor}
+    {setLayerVisibility}
+    {removeLayer}
+  />
 </div>
 
 <style>

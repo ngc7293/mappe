@@ -1,17 +1,20 @@
 <script lang="ts">
   import type { LayerData } from "@lib/types";
 
+  type CenterLayerFunc = (name: string) => void;
   type SetLayerColorFunc = (name: string, color: string) => void;
   type SetLayerVisibilityFunc = (name: string, visibility: boolean) => void;
   type RemoveLayerFunc = (name: string) => void;
 
   let {
     layers,
+    centerLayer,
     setLayerColor,
     setLayerVisibility,
     removeLayer,
   }: {
     layers: LayerData[];
+    centerLayer: CenterLayerFunc;
     setLayerColor: SetLayerColorFunc;
     setLayerVisibility: SetLayerVisibilityFunc;
     removeLayer: RemoveLayerFunc;
@@ -29,14 +32,18 @@
           setLayerColor(layer.name, (e.target as HTMLInputElement).value)}
         value={layer.color}
       />
+      <button class="layer-center" onclick={(_) => centerLayer(layer.name)}>
+        center
+      </button>
       <button
         class="layer-toggle"
         onclick={(_) => setLayerVisibility(layer.name, !layer.visible)}
-        >{#if layer.visible}hide{:else}show{/if}</button
       >
-      <button class="layer-remove" onclick={(_) => removeLayer(layer.name)}
-        >remove</button
-      >
+        {#if layer.visible}hide{:else}show{/if}
+      </button>
+      <button class="layer-remove" onclick={(_) => removeLayer(layer.name)}>
+        remove
+      </button>
     </div>
   {/each}
 </div>
