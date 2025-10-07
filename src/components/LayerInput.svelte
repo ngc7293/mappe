@@ -27,7 +27,7 @@
     return true;
   }
 
-  function onClick(_: Event) {
+  function addLayer(_: Event) {
     let trimmed = dataInput.value.trim();
     let name = nameInput.value.trim() || defaultName;
 
@@ -53,7 +53,7 @@
   <textarea bind:this={nameInput} placeholder="Layer Name" rows="1"></textarea>
   <textarea bind:this={dataInput} placeholder="GeoJSON / Polyline" rows="10"
   ></textarea>
-  <button onclick={onClick}>Add</button>
+  <button onclick={addLayer}>Add</button>
 </div>
 
 <style>
@@ -67,8 +67,8 @@
     flex-direction: column;
     gap: 8px;
   }
-
   #layer-input textarea {
+    min-width: 4em;
     background-color: rgb(255, 255, 255, 50%);
     resize: none;
     border: none;
