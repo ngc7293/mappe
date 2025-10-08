@@ -41,8 +41,6 @@ export class TilemapManager {
   private updateTilemap(z: number, enabled: boolean): void {
     const baseName = `tile-z${z}`;
 
-    console.log(`Updating tilemap: ${baseName}, enabled: ${enabled}`);
-
     if (!enabled) {
       this.removeTilemap(baseName);
       return;

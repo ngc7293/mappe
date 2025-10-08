@@ -12,6 +12,7 @@
   import { LayerManager } from "@lib/LayerManager.svelte";
   import { TilemapManager } from "@lib/TilemapManager.svelte";
   import { BasemapManager } from "@lib/BasemapManager.svelte";
+  import { tryConvertGeoJSON } from "@lib/parser";
 
   let container: HTMLDivElement;
   let map: Map;
@@ -42,8 +43,38 @@
       tilemapManager.updateTilemaps();
     });
 
-    return () => map.remove();
+    // Add global paste event listener
+    window.addEventListener("paste", handlePaste);
+
+    return () => {
+      map.remove();
+      window.removeEventListener("paste", handlePaste);
+    };
   });
+
+  function handlePaste(event: ClipboardEvent) {
+    // Ignore paste events from textarea or input elements (like LayerInput)
+    const target = event.target as HTMLElement;
+    if (target.tagName === "TEXTAREA" || target.tagName === "INPUT") {
+      return;
+    }
+
+    const clipboardData = event.clipboardData;
+    if (!clipboardData) {
+      return;
+    }
+
+    const pastedText = clipboardData.getData("text");
+    if (pastedText) {
+      // Attempt to parse the pasted text as GeoJSON and add it as a new layer
+      const geojson = tryConvertGeoJSON(pastedText);
+      if (geojson && layerManager) {
+        event.preventDefault(); // Prevent default paste behavior
+        const layerName = `Pasted Layer ${layerManager.getCounter()}`;
+        layerManager.createLayer(layerName, geojson);
+      }
+    }
+  }
 </script>
 
 <div id="map-container" bind:this={container}></div>

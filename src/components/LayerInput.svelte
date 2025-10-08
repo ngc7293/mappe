@@ -1,7 +1,6 @@
 <script lang="ts">
+  import { tryConvertGeoJSON } from "@lib/parser";
   import type { GeoJSON } from "geojson";
-
-  import polyline from "@mapbox/polyline";
 
   type CreateLayerFunc = (name: string, data: GeoJSON) => void;
 
@@ -15,38 +14,29 @@
 
   let nameInput: HTMLTextAreaElement;
   let dataInput: HTMLTextAreaElement;
+
+  let error: boolean = $state(false);
   let collapsed: boolean = $state(false);
-
-  function isWithinPolylineRange(str: string): boolean {
-    for (let i = 0; i < str.length; i++) {
-      const charCode = str.charCodeAt(i);
-      if (charCode < 63 || charCode > 126) {
-        return false;
-      }
-    }
-
-    return true;
-  }
 
   function addLayer(_: Event) {
     let trimmed = dataInput.value.trim();
-    let name = nameInput.value.trim() || defaultName;
 
     if (!trimmed) {
       return;
     }
 
-    if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
-      createLayer(name, JSON.parse(dataInput.value) as GeoJSON);
-    } else if (isWithinPolylineRange(trimmed)) {
-      createLayer(name, polyline.toGeoJSON(trimmed) as GeoJSON);
-    } else {
-      alert("Invalid input format. Please provide valid GeoJSON or Polyline.");
-      return;
-    }
+    const geojson = tryConvertGeoJSON(trimmed);
 
-    nameInput.value = "";
-    dataInput.value = "";
+    if (geojson !== null) {
+      const name = nameInput.value.trim() || defaultName;
+      createLayer(name, geojson);
+
+      error = false;
+      nameInput.value = "";
+      dataInput.value = "";
+    } else {
+      error = true;
+    }
   }
 
   function toggleCollapse() {
@@ -71,7 +61,13 @@
     >
   </div>
   <div class="vertical collapsible-content" class:collapsed>
-    <textarea bind:this={dataInput} placeholder="GeoJSON / Polyline" rows="10"
+    <textarea
+      bind:this={dataInput}
+      id="data-input"
+      placeholder="GeoJSON / Polyline"
+      rows="10"
+      class:error
+      oninput={() => (error = false)}
     ></textarea>
     <button class="loud" onclick={addLayer}>Add</button>
   </div>
@@ -81,20 +77,21 @@
   div.horizontal {
     display: flex;
     flex-direction: row;
+    gap: 8px;
   }
 
   div.vertical {
     display: flex;
     flex-direction: column;
+    gap: 8px;
   }
-
   #layer-input {
     background-color: rgb(255, 255, 255, 50%);
     backdrop-filter: blur(10px);
     padding: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     border-radius: 8px;
-    gap: 8px;
+
     transition: gap 0.3s ease;
   }
 
@@ -127,6 +124,12 @@
     font-size: 14px;
   }
 
+  #layer-input textarea#data-input.error {
+    border: 2px solid rgba(239, 68, 68, 0.8);
+    box-shadow: 0 0 8px 8px rgba(239, 68, 68, 0.2) inset;
+    box-sizing: border-box;
+    padding: 6px;
+  }
   #layer-input textarea:focus {
     outline: none;
   }
