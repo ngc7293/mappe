@@ -31,11 +31,11 @@ export default ts.config(
     },
   },
   {
-    files: ["**/*.svelte"],
+    files: ["**/*.svelte", "**/*.svelte.ts"],
     languageOptions: {
       parserOptions: {
         projectService: true,
-        extraFileExtensions: [".svelte"],
+        extraFileExtensions: [".svelte", ".svelte.ts"],
         parser: ts.parser,
         svelteConfig,
       },

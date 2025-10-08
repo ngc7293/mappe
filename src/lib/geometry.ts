@@ -1,5 +1,9 @@
 import type { Feature, GeoJSON, Position } from "geojson";
 
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), max);
+}
+
 export function getBounds(
   root: GeoJSON,
 ): [[number, number], [number, number]] | null {
@@ -85,5 +89,6 @@ export function tileToPoint(
     (2 * Math.atan(Math.exp((yf - 128) / -(256 / (2 * Math.PI)))) -
       Math.PI / 2) /
     (Math.PI / 180);
-  return [lon, lat];
+
+  return [lon, clamp(lat, -85.0511287798066, 85.0511287798066)];
 }

@@ -15,6 +15,7 @@
 
   let nameInput: HTMLTextAreaElement;
   let dataInput: HTMLTextAreaElement;
+  let collapsed: boolean = $state(false);
 
   function isWithinPolylineRange(str: string): boolean {
     for (let i = 0; i < str.length; i++) {
@@ -47,26 +48,74 @@
     nameInput.value = "";
     dataInput.value = "";
   }
+
+  function toggleCollapse() {
+    collapsed = !collapsed;
+  }
+
+  function iconForCollapseButton(): string {
+    return collapsed ? "▼" : "▲";
+  }
 </script>
 
-<div id="layer-input">
-  <textarea bind:this={nameInput} placeholder="Layer Name" rows="1"></textarea>
-  <textarea bind:this={dataInput} placeholder="GeoJSON / Polyline" rows="10"
-  ></textarea>
-  <button onclick={addLayer}>Add</button>
+<div id="layer-input" class="vertical" class:collapsed>
+  <div class="horizontal">
+    <textarea
+      bind:this={nameInput}
+      id="name-input"
+      placeholder="Layer Name"
+      rows="1"
+    ></textarea>
+    <button class="discrete" onclick={toggleCollapse}
+      >{iconForCollapseButton()}</button
+    >
+  </div>
+  <div class="vertical collapsible-content" class:collapsed>
+    <textarea bind:this={dataInput} placeholder="GeoJSON / Polyline" rows="10"
+    ></textarea>
+    <button class="loud" onclick={addLayer}>Add</button>
+  </div>
 </div>
 
 <style>
+  div.horizontal {
+    display: flex;
+    flex-direction: row;
+  }
+
+  div.vertical {
+    display: flex;
+    flex-direction: column;
+  }
+
   #layer-input {
     background-color: rgb(255, 255, 255, 50%);
     backdrop-filter: blur(10px);
     padding: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     border-radius: 8px;
-    display: flex;
-    flex-direction: column;
     gap: 8px;
+    transition: gap 0.3s ease;
   }
+
+  #layer-input.collapsed {
+    gap: 0;
+  }
+
+  .collapsible-content {
+    max-height: 500px;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+  }
+
+  .collapsible-content.collapsed {
+    max-height: 0;
+  }
+
+  #name-input {
+    flex: 1;
+  }
+
   #layer-input textarea {
     min-width: 4em;
     background-color: rgb(255, 255, 255, 50%);
@@ -82,7 +131,7 @@
     outline: none;
   }
 
-  #layer-input button {
+  #layer-input button.loud {
     background-color: rgb(0, 0, 0);
     color: rgb(255, 255, 255);
     font-weight: bold;
@@ -95,5 +144,16 @@
   #layer-input button:hover {
     background-color: rgb(91, 91, 91);
     transition: background-color 0.2s ease;
+  }
+
+  #layer-input button.discrete {
+    aspect-ratio: 1 / 1;
+    background-color: transparent;
+    color: rgb(0, 0, 0);
+    font-weight: bold;
+    border: none;
+    border-radius: 4px;
+    padding: 8px;
+    cursor: pointer;
   }
 </style>

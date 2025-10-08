@@ -2,24 +2,32 @@
   type ToggleTileMap = (zoom: number) => void;
 
   let {
-    activeTilemaps: tilemaps,
+    allowed,
+    enabled,
+    active,
     toggleTileMap,
   }: {
-    activeTilemaps: number[];
+    allowed: number[];
+    enabled: number[];
+    active: number[];
     toggleTileMap: ToggleTileMap;
   } = $props();
 
   function classForZoom(zoom: number): string {
-    return tilemaps.includes(zoom) ? "active" : "inactive";
+    const classes = [
+      active.includes(zoom) ? "active" : "inactive",
+      enabled.includes(zoom) ? "enabled" : "disabled",
+    ];
+    return classes.join(" ");
   }
 </script>
 
 <div id="basemap-container">
-  <button onclick={(_) => toggleTileMap(8)} class={classForZoom(8)}
-    >Tiles 8</button
-  ><button onclick={(_) => toggleTileMap(10)} class={classForZoom(10)}
-    >Tiles 10</button
-  >
+  {#each allowed as z (z)}
+    <button onclick={(_) => toggleTileMap(z)} class={classForZoom(z)}
+      >Tiles {z}</button
+    >
+  {/each}
 </div>
 
 <style>
@@ -54,12 +62,17 @@
     background-color: rgba(255, 255, 255, 0.9);
   }
 
-  #basemap-container button.active {
+  #basemap-container button.enabled {
     background-color: rgba(0, 0, 0, 0.2);
     color: white;
   }
 
-  #basemap-container button.active:hover {
+  #basemap-container button.enabled:hover {
     background-color: rgba(100, 100, 100, 0.2);
+  }
+
+  #basemap-container button.enabled.inactive {
+    text-decoration: line-through;
+    color: rgb(70, 70, 70);
   }
 </style>
