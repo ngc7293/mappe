@@ -14,7 +14,7 @@ COPY tsconfig.json    /build/
 COPY index.html /build/
 COPY src/       /build/src/
 
-RUN npm run build
+RUN --mount=type=secret,id=MAPBOX_TOKEN,env=VITE_MAPBOX_TOKEN npm run build
 
 FROM nginx:latest
 

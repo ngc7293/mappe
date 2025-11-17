@@ -11,7 +11,8 @@
     "paths": {
       "@components/*": ["components/*"],
       "@lib/*": ["lib/*"]
-    }
+    },
+    "types": ["vite/client"]
   },
   "include": ["*.ts", "src/**/*.ts", "src/**/*.svelte"]
 }

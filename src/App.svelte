@@ -13,6 +13,7 @@
   import { TilemapManager } from "@lib/TilemapManager.svelte";
   import { BasemapManager } from "@lib/BasemapManager.svelte";
   import { tryConvertGeoJSON } from "@lib/parser";
+  import PlaceInput from "@components/PlaceInput.svelte";
 
   let container: HTMLDivElement;
   let map: Map;
@@ -24,8 +25,7 @@
   onMount(() => {
     map = createMap({
       container: container,
-      accessToken:
-        "pk.eyJ1IjoiZGF2aWRib3VyZ2F1bHQiLCJhIjoiY21nZnl0MW54MGV4ODJqb3I4anVkeGtyMSJ9.i57iGlt21PspglTyanR9Cw",
+      accessToken: import.meta.env.VITE_MAPBOX_TOKEN,
       style: "mapbox://styles/mapbox/streets-v11",
       center: [-73.5674, 45.5019], // Montréal
       zoom: 10,
@@ -80,6 +80,11 @@
 <div id="map-container" bind:this={container}></div>
 {#if layerManager && tilemapManager && basemapManager}
   <div id="controls-container">
+    <PlaceInput
+      accessToken={import.meta.env.VITE_MAPBOX_TOKEN}
+      createLayer={layerManager.createLayer}
+      centerBox={(bbox) => map.fitBounds(bbox)}
+    />
     <LayerInput
       createLayer={layerManager.createLayer}
       defaultName={`Layer ${layerManager.getCounter()}`}

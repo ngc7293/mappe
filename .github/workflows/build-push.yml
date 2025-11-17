@@ -32,6 +32,8 @@ jobs:
           context: .
           file: docker/Dockerfile
           push: true
+          secrets: |
+            "MAPBOX_TOKEN=${{ secrets.MAPBOX_TOKEN }}"
           tags: |
             ghcr.io/${{ github.repository }}:latest
             ghcr.io/${{ github.repository }}:${{ github.sha }}

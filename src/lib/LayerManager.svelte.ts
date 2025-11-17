@@ -2,6 +2,7 @@ import type { GeoJSON } from "geojson";
 import type { Map } from "mapbox-gl";
 import type { LayerData } from "./types";
 import { getBounds } from "./geometry";
+import { getColor } from "./color";
 
 /**
  * Manages GeoJSON layers on a Mapbox map
@@ -11,7 +12,6 @@ export class LayerManager {
   private counter: number = $state(1);
 
   private map: Map;
-  private colors: string[] = ["#f0a01c", "#66cf2d", "#4b5ae3", "#e06577"];
 
   constructor(map: Map) {
     this.map = map;
@@ -27,10 +27,11 @@ export class LayerManager {
       this.removeLayer(name);
     }
 
+    const color = getColor("layers");
     const layer: LayerData = {
       name,
       data,
-      color: this.colors[this.counter % this.colors.length],
+      color,
       visible: true,
     };
 

@@ -63,7 +63,8 @@
     border-radius: 8px;
     align-items: center;
     font-size: 12px;
-    font-family: monospace;
+    font-family: sans-serif;
+    line-height: 1.2em;
   }
 
   .layer-name {
