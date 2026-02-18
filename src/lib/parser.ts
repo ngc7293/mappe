@@ -1,5 +1,6 @@
 import type { Feature, GeoJSON } from "geojson";
 import polyline from "@mapbox/polyline";
+import type { CoordinateOrder } from "./coordinateOrder.svelte";
 
 function isWithinPolylineRange(str: string): boolean {
   for (let i = 0; i < str.length; i++) {
@@ -12,7 +13,7 @@ function isWithinPolylineRange(str: string): boolean {
   return true;
 }
 
-function tryParseCSV(input: string): GeoJSON | null {
+function tryParseCSV(input: string, order: CoordinateOrder): GeoJSON | null {
   try {
     const lines = input.trim().split("\n");
     const features: Feature[] = [];
@@ -26,24 +27,24 @@ function tryParseCSV(input: string): GeoJSON | null {
 
       if (isNaN(a) || isNaN(b)) continue;
 
-      // Check if lon,lat or lat,lon based on valid ranges
-      // lon: -180 to 180, lat: -90 to 90
-      if (Math.abs(a) <= 180 && Math.abs(b) <= 90) {
+      // Interpret based on user preference
+      let lon: number, lat: number;
+      if (order === "xy") {
+        lon = a;
+        lat = b;
+      } else {
+        lat = a;
+        lon = b;
+      }
+
+      // Validate ranges: lon: -180 to 180, lat: -90 to 90
+      if (Math.abs(lon) <= 180 && Math.abs(lat) <= 90) {
         features.push({
           type: "Feature",
           properties: {},
           geometry: {
             type: "Point",
-            coordinates: [a, b],
-          },
-        });
-      } else if (Math.abs(b) <= 180 && Math.abs(a) <= 90) {
-        features.push({
-          type: "Feature",
-          properties: {},
-          geometry: {
-            type: "Point",
-            coordinates: [b, a],
+            coordinates: [lon, lat],
           },
         });
       }
@@ -62,7 +63,10 @@ function tryParseCSV(input: string): GeoJSON | null {
   return null;
 }
 
-export function tryConvertGeoJSON(input: string): GeoJSON | null {
+export function tryConvertGeoJSON(
+  input: string,
+  order: CoordinateOrder = "xy",
+): GeoJSON | null {
   if (input.startsWith("{") && input.endsWith("}")) {
     try {
       return JSON.parse(input) as GeoJSON;
@@ -72,6 +76,6 @@ export function tryConvertGeoJSON(input: string): GeoJSON | null {
   } else if (isWithinPolylineRange(input)) {
     return polyline.toGeoJSON(input) as GeoJSON;
   } else {
-    return tryParseCSV(input);
+    return tryParseCSV(input, order);
   }
 }

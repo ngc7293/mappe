@@ -13,6 +13,7 @@
   import { TilemapManager } from "@lib/TilemapManager.svelte";
   import { BasemapManager } from "@lib/BasemapManager.svelte";
   import { tryConvertGeoJSON } from "@lib/parser";
+  import { coordinateOrder } from "@lib/coordinateOrder.svelte";
   import PlaceInput from "@components/PlaceInput.svelte";
 
   let container: HTMLDivElement;
@@ -67,7 +68,7 @@
     const pastedText = clipboardData.getData("text");
     if (pastedText) {
       // Attempt to parse the pasted text as GeoJSON and add it as a new layer
-      const geojson = tryConvertGeoJSON(pastedText);
+      const geojson = tryConvertGeoJSON(pastedText, coordinateOrder.order);
       if (geojson && layerManager) {
         event.preventDefault(); // Prevent default paste behavior
         const layerName = `Pasted Layer ${layerManager.getCounter()}`;

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { tryConvertGeoJSON } from "@lib/parser";
+  import { coordinateOrder } from "@lib/coordinateOrder.svelte";
   import type { GeoJSON } from "geojson";
 
   type CreateLayerFunc = (name: string, data: GeoJSON) => void;
@@ -25,7 +26,7 @@
       return;
     }
 
-    const geojson = tryConvertGeoJSON(trimmed);
+    const geojson = tryConvertGeoJSON(trimmed, coordinateOrder.order);
 
     if (geojson !== null) {
       const name = nameInput.value.trim() || defaultName;
@@ -37,6 +38,10 @@
     } else {
       error = true;
     }
+  }
+
+  function toggleCoordinateOrder() {
+    coordinateOrder.toggle();
   }
 
   function toggleCollapse() {
@@ -56,7 +61,14 @@
       placeholder="Layer Name"
       rows="1"
     ></textarea>
-    <button class="discrete" onclick={toggleCollapse}
+    <button
+      class="discrete"
+      onclick={toggleCoordinateOrder}
+      title="Toggle coordinate order between Lon,Lat (GeoJSON standard) and Lat,Lon (most tools)"
+    >
+      {coordinateOrder.getLabel()} ⇆
+    </button>
+    <button id="collapse" class="discrete" onclick={toggleCollapse}
       >{iconForCollapseButton()}</button
     >
   </div>
@@ -64,7 +76,7 @@
     <textarea
       bind:this={dataInput}
       id="data-input"
-      placeholder="GeoJSON / Polyline"
+      placeholder="GeoJSON / Polyline / CSV"
       rows="10"
       class:error
       oninput={() => (error = false)}
@@ -85,6 +97,7 @@
     flex-direction: column;
     gap: 8px;
   }
+
   #layer-input {
     background-color: rgb(255, 255, 255, 50%);
     backdrop-filter: blur(10px);
@@ -122,6 +135,8 @@
     padding: 8px;
     font-family: monospace;
     font-size: 14px;
+    box-sizing: border-box;
+    width: 100%;
   }
 
   #layer-input textarea#data-input.error {
@@ -150,13 +165,20 @@
   }
 
   #layer-input button.discrete {
-    aspect-ratio: 1 / 1;
-    background-color: transparent;
+    background: rgba(255, 255, 255, 0);
     color: rgb(0, 0, 0);
     font-weight: bold;
     border: none;
     border-radius: 4px;
-    padding: 8px;
+    padding: 2px 8px;
     cursor: pointer;
+  }
+
+  #layer-input button.discrete:hover {
+    background-color: rgba(255, 255, 255, 0.9);
+  }
+
+  #layer-input button#collapse {
+    aspect-ratio: 1 / 1;
   }
 </style>
