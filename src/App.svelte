@@ -42,6 +42,7 @@
       basemapManager.initializeOSMLayer();
       layerManager.restoreLayers();
       tilemapManager.updateTilemaps();
+      loadDataFromHash();
     });
 
     // Add global paste event listener
@@ -52,6 +53,25 @@
       window.removeEventListener("paste", handlePaste);
     };
   });
+
+  let hashDataLoaded = false;
+
+  function loadDataFromHash() {
+    if (hashDataLoaded) return;
+    hashDataLoaded = true;
+
+    const hash = window.location.hash;
+    if (!hash) return;
+
+    const params = new URLSearchParams(hash.slice(1));
+    const data = params.get("data");
+    if (!data) return;
+
+    const geojson = tryConvertGeoJSON(data, coordinateOrder.order);
+    if (geojson && layerManager) {
+      layerManager.createLayer("Link Data", geojson);
+    }
+  }
 
   function handlePaste(event: ClipboardEvent) {
     // Ignore paste events from textarea or input elements (like LayerInput)
