@@ -71,6 +71,7 @@
     if (geojson && layerManager) {
       layerManager.createLayer("Link Data", geojson);
     }
+    layerManager.centerLayer("Link Data");
   }
 
   function handlePaste(event: ClipboardEvent) {

@@ -113,7 +113,7 @@ export class LayerManager {
   centerLayer = (name: string): void => {
     const layer = this.layers.find((layer) => layer.name === name);
     if (layer) {
-      this.map.fitBounds(getBounds(layer.data), { padding: 40 });
+      this.map.fitBounds(getBounds(layer.data), { padding: 40, duration: 200 });
     }
   };
 
