@@ -28,7 +28,7 @@
       <input
         class="layer-color"
         type="color"
-        onchange={(e) =>
+        oninput={(e) =>
           setLayerColor(layer.name, (e.target as HTMLInputElement).value)}
         value={layer.color}
       />
