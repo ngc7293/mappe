@@ -74,7 +74,7 @@ export function tryConvertGeoJSON(
       return null;
     }
   } else if (isWithinPolylineRange(input)) {
-    return polyline.toGeoJSON(input) as GeoJSON;
+    return polyline.toGeoJSON(input.replaceAll("\\\\", "\\")) as GeoJSON;
   } else {
     return tryParseCSV(input, order);
   }
